@@ -4,10 +4,12 @@ import net.dv8tion.jda.core.AccountType;
 import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.JDABuilder;
 import net.dv8tion.jda.core.entities.*;
+import net.dv8tion.jda.core.entities.impl.RoleImpl;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.core.exceptions.ErrorResponseException;
 import net.dv8tion.jda.core.exceptions.RateLimitedException;
 import net.dv8tion.jda.core.hooks.ListenerAdapter;
+import net.dv8tion.jda.core.managers.GuildController;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -40,36 +42,29 @@ public class Main extends ListenerAdapter{
     private String APIDLv = null;
     private String BDUPLv = null;
     private String WEBAPv = null;
-    MessageChannel postingChannel = null;
+    private MessageChannel postingChannel = null;
     private loop loop1 = new loop();
-    Thread thread = new Thread(loop1);
+    private Thread thread = new Thread(loop1);
     /**IDK Why I have to do this...**/
-    secrets secret = new secrets();
-    static secrets secretStatic = new secrets();
+    private secrets secret = new secrets();
+    private static secrets secretStatic = new secrets();
 
     public static void main(String[] args) {
-        try
-        {
+        try {
             JDA jda = new JDABuilder(AccountType.BOT)
                     .setToken(secretStatic.botKey)  //Bot Key
                     .addEventListener(new Main())  //An instance of a class that will handle events.
                     .buildBlocking();  //There are 2 ways to login, blocking vs async. Blocking guarantees that JDA will be completely loaded.
+        } catch (LoginException e) {
+            e.printStackTrace(); //If anything goes wrong in terms of authentication, this is the exception that will represent it
         }
-        catch (LoginException e)
-        {
-            //If anything goes wrong in terms of authentication, this is the exception that will represent it
-            e.printStackTrace();
-        }
-        catch (InterruptedException e)
-        {
+        catch (InterruptedException e) {
             //Due to the fact that buildBlocking is a blocking method, one which waits until JDA is fully loaded,
             // the waiting can be interrupted. This is the exception that would fire in that situation.
             //As a note: in this extremely simplified example this will never occur. In fact, this will never occur unless
             // you use buildBlocking in a thread that has the possibility of being interrupted (async thread usage and interrupts)
             e.printStackTrace();
-        }
-        catch (RateLimitedException e)
-        {
+        } catch (RateLimitedException e) {
             //The login process is one which can be ratelimited. If you attempt to login in multiple times, in rapid succession
             // (multiple times a second), you would hit the ratelimit, and would see this exception.
             //As a note: It is highly unlikely that you will ever see the exception here due to how infrequent login is.
@@ -86,25 +81,7 @@ public class Main extends ListenerAdapter{
         public void run() {
             while(true){
                 if(runLoop){
-                    if(checkOrangeBetaStatus() != TOABetaOnline){
-                        update();
-                        System.out.println("Updated because of TOA Beta Web");
-                    }else if(checkOrangeStatus() != TOAOrgOnline){
-                        update();
-                        System.out.println("Updated because of TOA Live Web");
-                    }else if(checkYellowStatus() != TOAYelOnline){
-                        update();
-                        System.out.println("Updated because of TYA Dev Web");
-                    }else if(checkAPIBool("http://beta.theorangealliance.org/api") != TOABetaAPIOnline){
-                        update();
-                        System.out.println("Updated because of TOA Beta API");
-                    }else if (checkAPIBool("http://www.theorangealliance.org/api" ) != TOAAPIOrgOnline){
-                        update();
-                        System.out.println("Updated because of TOA Live API");
-                    }else if (updateGithub){
-                        update();
-                        System.out.println("Updated because of Github");
-                    }
+                    test();
                     try {
                         Thread.sleep(waitTime * 1000);
                     } catch (InterruptedException e) {
@@ -115,28 +92,45 @@ public class Main extends ListenerAdapter{
             }
         }
 
+        private void test(){
+            if(checkOrangeBetaStatus() != TOABetaOnline){
+                update();
+                System.out.println("Updated because of TOA Beta Web");
+            }else if(checkOrangeStatus() != TOAOrgOnline){
+                update();
+                System.out.println("Updated because of TOA Live Web");
+            }else if(checkYellowStatus() != TOAYelOnline){
+                update();
+                System.out.println("Updated because of TYA Dev Web");
+            }else if(checkAPIBool("http://beta.theorangealliance.org/api") != TOABetaAPIOnline){
+                update();
+                System.out.println("Updated because of TOA Beta API");
+            }else if (checkAPIBool("http://www.theorangealliance.org/api" ) != TOAAPIOrgOnline){
+                update();
+                System.out.println("Updated because of TOA Live API");
+            }else if (updateGithub){
+                update();
+                System.out.println("Updated because of Github");
+            }
+        }
+
     }
 
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
         //These are provided with every event in JDA
         JDA jda = event.getJDA();                       //JDA, the core of the api.
-        long responseNumber = event.getResponseNumber();//The amount of discord events that JDA has received since the last reconnect.
 
         //Event specific information
         User author = event.getAuthor();                //The user that sent the message
         Message message = event.getMessage();           //The message that was received.
-        MessageChannel channel = event.getChannel();
-        //This is the MessageChannel that the message was sent to.
-        //  This could be a TextChannel, PrivateChannel, or Group!
+        MessageChannel channel = event.getChannel();    //This is the MessageChannel that the message was sent to.
+        Guild guild = event.getGuild();                 //The Guild that this message was sent in. (note, in the API, Guilds are Servers)
 
         String msg = message.getContent();              //This returns a human readable version of the Message. Similar to what you would see in the client.
 
-        boolean bot = author.isBot();                    //This boolean is useful to determine if the User that sent the Message is a BOT or not!
+        if (event.isFromType(ChannelType.TEXT) && channel.getId().equals(secret.channelToListen)){ //If this message was sent to a Guild TextChannel
 
-        if (event.isFromType(ChannelType.TEXT) && /*!bot &&*/ channel.getId().equals("347007802419707917")){ //If this message was sent to a Guild TextChannel
-
-            Guild guild = event.getGuild();             //The Guild that this message was sent in. (note, in the API, Guilds are Servers)
             TextChannel textChannel = event.getTextChannel(); //The TextChannel that this message was sent to.
             Member member = event.getMember();          //This Member that sent the message. Contains Guild specific information about the User!
 
@@ -149,11 +143,9 @@ public class Main extends ListenerAdapter{
             }                                           // otherwise it will default to their username. (User#getName())
 
             System.out.printf("(%s)[%s]<%s>: %s\n", guild.getName(), textChannel.getName(), name, msg);
-            System.out.println(message.getAuthor().getId());
         }
 
-
-        if(checkClientID(message.getAuthor().getId())){
+        if(checkClientID(guild, jda, message)){
             message.delete().complete();
             if(msg.equals("!stop stats")){
                 channel.sendMessage(":wave:").complete();
@@ -168,7 +160,7 @@ public class Main extends ListenerAdapter{
 
                 if (msg.equals("!check")) {
                     update();
-                }else if(msg.equals("!github") && checkClientID(message.getAuthor().getId())){
+                }else if(msg.equals("!github")){
                     String delete = channel.sendMessage("Next manual `!check` or auto check will update the versions for all of the programs.").complete().getId();
                     channel.deleteMessageById(delete).queueAfter(10, TimeUnit.SECONDS);
                     updateGithub = true;
@@ -370,13 +362,8 @@ public class Main extends ListenerAdapter{
         return new BufferedReader(new InputStreamReader(con.getInputStream()));
     }
 
-    private boolean checkClientID(String client){
-        for(String admin : secret.admins){
-            if(client.equals(admin)){
-                return true;
-            }
-        }
-        return false;
+    private boolean checkClientID(Guild guild, JDA jda, Message message){
+        return guild.getMembersWithRoles(jda.getRolesByName(secret.roleAllowed, true)).contains(message.getMember());
     }
 
     private void forceUpdateGithubVariables(){

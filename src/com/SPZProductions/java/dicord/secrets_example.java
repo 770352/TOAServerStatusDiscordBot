@@ -25,7 +25,8 @@ public class secrets_example {
     public final String serverStatusRoleID = ""; //The role to @ when server status changes
     public final String toaAdminRoleID = ""; //The role to inform the admin when the server status changes
     public final String spamChannelID = ""; //The Channel in which the ?giveme command can/should be performed
+    public final String channelToListen = ""; //The Channel you want t the bot to output in it's console (Preferably the one you'll be controlling it in)
     //TODO: Change this to role rather than specific user because this is kinda dumb
-    public final String[] admins = {"", "", "", ""};//All people allowed to use the bot
+    public final String roleAllowed = ""; //The role that is allowed to use this bot
 
 }
