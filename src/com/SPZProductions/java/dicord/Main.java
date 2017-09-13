@@ -4,15 +4,12 @@ import net.dv8tion.jda.core.AccountType;
 import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.JDABuilder;
 import net.dv8tion.jda.core.entities.*;
-import net.dv8tion.jda.core.entities.impl.RoleImpl;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.core.exceptions.ErrorResponseException;
 import net.dv8tion.jda.core.exceptions.RateLimitedException;
 import net.dv8tion.jda.core.hooks.ListenerAdapter;
-import net.dv8tion.jda.core.managers.GuildController;
 import org.json.JSONArray;
 import org.json.JSONObject;
-
 
 import javax.security.auth.login.LoginException;
 import java.io.BufferedReader;
@@ -81,7 +78,7 @@ public class Main extends ListenerAdapter{
         public void run() {
             while(true){
                 if(runLoop){
-                    test();
+                    testForUp();
                     try {
                         Thread.sleep(waitTime * 1000);
                     } catch (InterruptedException e) {
@@ -92,7 +89,7 @@ public class Main extends ListenerAdapter{
             }
         }
 
-        private void test(){
+        private void testForUp(){
             if(checkOrangeBetaStatus() != TOABetaOnline){
                 update();
                 System.out.println("Updated because of TOA Beta Web");
@@ -130,66 +127,36 @@ public class Main extends ListenerAdapter{
         String msg = message.getContent();              //This returns a human readable version of the Message. Similar to what you would see in the client.
 
         if (event.isFromType(ChannelType.TEXT) && channel.getId().equals(secret.channelToListen)){ //If this message was sent to a Guild TextChannel
-
             TextChannel textChannel = event.getTextChannel(); //The TextChannel that this message was sent to.
             Member member = event.getMember();          //This Member that sent the message. Contains Guild specific information about the User!
-
-            String name;
-            if (message.isWebhookMessage()) {
-                name = author.getName();                //If this is a Webhook message, then there is no Member associated
-            }                                           // with the User, thus we default to the author for name.
-            else {
-                name = member.getEffectiveName();       //This will either use the Member's nickname if they have one,
-            }                                           // otherwise it will default to their username. (User#getName())
-
+            String name = member.getEffectiveName();       //This will either use the Member's nickname if they have one, otherwise it will default to their username. (User#getName())
             System.out.printf("(%s)[%s]<%s>: %s\n", guild.getName(), textChannel.getName(), name, msg);
         }
 
         if(checkClientID(guild, jda, message)){
             message.delete().complete();
+
             if(msg.equals("!stop stats")){
-                channel.sendMessage(":wave:").complete();
-                System.exit(0);
+                stopProgram(channel);
 
             }else if(msg.equals("!post here")){
-                postingChannel = channel;
-                String delete = postingChannel.sendMessage("Channel set to <#" + postingChannel.getId() + ">").complete().getId();
-                postingChannel.deleteMessageById(delete).queueAfter(10, TimeUnit.SECONDS);
+                setPostChannel(channel);
 
             }else if(postingChannel != null){
-
                 if (msg.equals("!check")) {
                     update();
+
                 }else if(msg.equals("!github")){
-                    String delete = channel.sendMessage("Next manual `!check` or auto check will update the versions for all of the programs.").complete().getId();
-                    channel.deleteMessageById(delete).queueAfter(10, TimeUnit.SECONDS);
-                    updateGithub = true;
+                    githubCommand(channel);
 
                 }else if(msg.contains("!loop ")){
-                    try{
-                        if(!thread.isAlive()){
-                            thread.start();
-                        }
-                        loop1.waitTime = 60;
-                        loop1.waitTime = Integer.parseInt(msg.substring(6));
-                    }catch(Exception e){
-                        e.printStackTrace();
-                    }
-                    loop1.runLoop = true;
+                    loopCommand(msg);
 
                 }else if(msg.contains("!stop loop")){
-                    if(loop1.runLoop){
-                        loop1.runLoop = false;
-                        String delete = postingChannel.sendMessage("Check Loop Stopped").complete().getId();
-                        postingChannel.deleteMessageById(delete).queueAfter(10, TimeUnit.SECONDS);
-                    }else{
-                        String delete = postingChannel.sendMessage("Check Loop Not Running!  Type `!loop [Check Interval}` to start.").complete().getId();
-                        postingChannel.deleteMessageById(delete).queueAfter(10, TimeUnit.SECONDS);
-                    }
+                    stopLoop();
                 }
             }else if(msg.contains("!loop ") || msg.equals("!github") || msg.equals("!stop loop")){
-                String delete = channel.sendMessage("Posting Channel not set. Type `!post here` in your desired channel to set.").complete().getId();
-                channel.deleteMessageById(delete).queueAfter(10, TimeUnit.SECONDS);
+                postNotSet(channel);
             }
         }
 
@@ -495,5 +462,51 @@ public class Main extends ListenerAdapter{
         if(postingChannel != null){
             lastMessageID = postingChannel.sendMessage(statistics.toString()).complete().getId();
         }
+    }
+
+    private void stopProgram(MessageChannel channel){
+        channel.sendMessage(":wave:").complete();
+        System.exit(0);
+    }
+
+    private void setPostChannel(MessageChannel channel){
+        postingChannel = channel;
+        String delete = postingChannel.sendMessage("Channel set to <#" + postingChannel.getId() + ">").complete().getId();
+        postingChannel.deleteMessageById(delete).queueAfter(10, TimeUnit.SECONDS);
+    }
+
+    private void githubCommand(MessageChannel channel){
+        String delete = channel.sendMessage("Next manual `!check` or auto check will update the versions for all of the programs.").complete().getId();
+        channel.deleteMessageById(delete).queueAfter(10, TimeUnit.SECONDS);
+        updateGithub = true;
+    }
+
+    private void loopCommand(String msg){
+        try{
+            if(!thread.isAlive()){
+                thread.start();
+            }
+            loop1.waitTime = 60;
+            loop1.waitTime = Integer.parseInt(msg.substring(6));
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+        loop1.runLoop = true;
+    }
+
+    private void stopLoop(){
+        if(loop1.runLoop){
+            loop1.runLoop = false;
+            String delete = postingChannel.sendMessage("Check Loop Stopped").complete().getId();
+            postingChannel.deleteMessageById(delete).queueAfter(10, TimeUnit.SECONDS);
+        }else{
+            String delete = postingChannel.sendMessage("Check Loop Not Running!  Type `!loop [Check Interval}` to start.").complete().getId();
+            postingChannel.deleteMessageById(delete).queueAfter(10, TimeUnit.SECONDS);
+        }
+    }
+
+    private void postNotSet(MessageChannel channel){
+        String delete = channel.sendMessage("Posting Channel not set. Type `!post here` in your desired channel to set.").complete().getId();
+        channel.deleteMessageById(delete).queueAfter(10, TimeUnit.SECONDS);
     }
 }
