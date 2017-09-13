@@ -1,0 +1,9 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="TOAServerStatusDiscordBot:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/TOAServerStatusDiscordBot_jar</output-path>
+    <root id="archive" name="TOAServerStatusDiscordBot.jar">
+      <element id="module-output" name="TOAServerStatusDiscordBot" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/../JDA-3.3.0_260-withDependencies.jar" path-in-jar="/" />
+    </root>
+  </artifact>
+</component>
