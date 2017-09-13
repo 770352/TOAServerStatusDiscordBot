@@ -133,7 +133,7 @@ public class Main extends ListenerAdapter{
             System.out.printf("(%s)[%s]<%s>: %s\n", guild.getName(), textChannel.getName(), name, msg);
         }
 
-        if(checkClientID(guild, jda, message)){
+        if(checkClientID(guild, jda, message) && msg.startsWith("!") && channel.getId().equals(secret.channelToListen)){
             message.delete().complete();
 
             if(msg.equals("!stop stats")){
