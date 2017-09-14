@@ -90,23 +90,24 @@ public class Main extends ListenerAdapter{
         }
 
         private void testForUp(){
-            if(checkOrangeBetaStatus() != TOABetaOnline){
+            if(Boolean.valueOf(checkWeb("http://beta.theorangealliance.org/home").get(0)) != TOABetaOnline){
                 update();
                 System.out.println("Updated because of TOA Beta Web");
-            }else if(checkOrangeStatus() != TOAOrgOnline){
+            }else if(Boolean.valueOf(checkWeb("http://theorangealliance.org/home").get(0)) != TOAOrgOnline){
                 update();
                 System.out.println("Updated because of TOA Live Web");
-            }else if(checkYellowStatus() != TOAYelOnline){
+            }else if(Boolean.valueOf(checkWeb("http://dev.theyellowalliance.com/home").get(0)) != TOAYelOnline){
                 update();
                 System.out.println("Updated because of TYA Dev Web");
-            }else if(checkAPIBool("http://beta.theorangealliance.org/api") != TOABetaAPIOnline){
+            }else if(Boolean.valueOf(checkAPI("http://beta.theorangealliance.org/api").get(0)) != TOABetaAPIOnline){
                 update();
                 System.out.println("Updated because of TOA Beta API");
-            }else if (checkAPIBool("http://www.theorangealliance.org/api" ) != TOAAPIOrgOnline){
+            }else if (Boolean.valueOf(checkAPI("http://theorangealliance.org/api").get(0)) != TOAAPIOrgOnline){
                 update();
                 System.out.println("Updated because of TOA Live API");
             }else if (updateGithub){
                 update();
+                updateGithub = false;
                 System.out.println("Updated because of Github");
             }
         }
@@ -162,46 +163,25 @@ public class Main extends ListenerAdapter{
 
     }
 
-    boolean checkYellowStatus(){
-        boolean connectionSuccess = false;
-         try {
-             final URLConnection connection = new URL("http://dev.theyellowalliance.com/home").openConnection();
-             connection.connect();
-             connectionSuccess = true;
-         } catch (final MalformedURLException e) {
-             e.printStackTrace();
-         } catch (IOException e) {
-             e.printStackTrace();
-         }
-         return connectionSuccess;
-     }
-
-    boolean checkOrangeBetaStatus(){
-        boolean connectionSuccess = false;
+    List<String> checkWeb(String sUrl){
+        List<String> returnValue = new ArrayList<>();
         try {
-            final URLConnection connection = new URL("http://beta.theorangealliance.org/home").openConnection();
-            connection.connect();
-            connectionSuccess = true;
-        } catch (final MalformedURLException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
+            HttpURLConnection.setFollowRedirects(false);
+            // HttpURLConnection.setInstanceFollowRedirects(false)
+            HttpURLConnection con = (HttpURLConnection) new URL(sUrl)
+                    .openConnection();
+            con.setRequestMethod("HEAD");
+            if(con.getResponseCode() == HttpURLConnection.HTTP_OK){
+                returnValue.add("true");
+                returnValue.add("200");
+            }else{
+                returnValue.add("false");
+                returnValue.add(con.getResponseCode() + "");
+            }
+        } catch (Exception e) {
             e.printStackTrace();
         }
-        return connectionSuccess;
-    }
-
-    boolean checkOrangeStatus(){
-        boolean connectionSuccess = false;
-        try {
-            final URLConnection connection = new URL("http://theorangealliance.org/home").openConnection();
-            connection.connect();
-            connectionSuccess = true;
-        } catch (final MalformedURLException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return connectionSuccess;
+        return returnValue;
     }
 
     List<String> checkAPI(String sUrl) {
@@ -230,29 +210,6 @@ public class Main extends ListenerAdapter{
         return returnValue;
     }
 
-    boolean checkAPIBool(String sUrl) {
-        boolean returnCode = false;
-        try {
-            URL url = new URL(sUrl);
-
-            HttpURLConnection con = (HttpURLConnection) url.openConnection();
-
-            con.setRequestMethod("GET");
-
-            con.setRequestProperty("X-TOA-Key", secret.apiKey);
-            con.setRequestProperty("X-Application-Origin", "TOA Discord Status Bot");
-
-            int responseCode = con.getResponseCode();
-            if (responseCode == 200) {
-                returnCode = true;
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return returnCode;
-    }
-
     private String checkVersionAPIDownloader(){
         String sUrl = "https://api.github.com/repos/orange-alliance/TOAApiDowloader/releases/latest?client_id=" + secret.githubClientID + "&client_secret=" + secret.githubClientSecret;
         String version = null;
@@ -270,7 +227,6 @@ public class Main extends ListenerAdapter{
         String version = null;
         try {
             version = returnVersion(new URL(sUrl));
-
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -355,14 +311,15 @@ public class Main extends ListenerAdapter{
 
         stats.add("-----------SERVER STATUS-----------");
 
-        if(checkOrangeStatus()){
+        List orangeLive = checkWeb("http://theorangealliance.org/home");
+        if(orangeLive.get(0).equals("true")){
             stats.add("theorangealliance.org - :white_check_mark:");
             if(!TOAOrgOnline){
                 postMessage.add("<@&" + secret.serverStatusRoleID + "> the Main Orange Alliance Web Server is back online.");
             }
             TOAOrgOnline = true;
         }else{
-            stats.add("theorangealliance.org - :x:");
+            stats.add("theorangealliance.org - :x: (Response Code: " + orangeLive.get(1) + ")" );
             if(TOAOrgOnline){
                 postMessage.add("<@&" + secret.serverStatusRoleID + "> the Main Orange Alliance Web Server is offline.  <@&" + secret.toaAdminRoleID + "> are investigating the issue now.");
             }else{
@@ -388,14 +345,15 @@ public class Main extends ListenerAdapter{
             TOAAPIOrgOnline = false;
         }
 
-        if(checkOrangeBetaStatus()){
+        List orangeBeta = checkWeb("http://beta.theorangealliance.org/home");
+        if(orangeBeta.get(0).equals("true")){
             stats.add("beta.theorangealliance.org - :white_check_mark:");
             if(!TOABetaOnline){
                 postMessage.add("<@&" + secret.serverStatusRoleID + "> the Beta Orange Alliance Web Server is back online.");
             }
             TOABetaOnline = true;
         }else{
-            stats.add("beta.theorangealliance.org - :x:");
+            stats.add("beta.theorangealliance.org - :x: (Response Code: " + orangeBeta.get(1) + ")" );
             if(TOABetaOnline){
                 postMessage.add("<@&" + secret.serverStatusRoleID + "> the Beta Orange Alliance Web Server is offline.  <@&" + secret.toaAdminRoleID + "> are investigating the issue now.");
             }else{
@@ -421,14 +379,15 @@ public class Main extends ListenerAdapter{
             TOABetaAPIOnline = false;
         }
 
-        if(checkYellowStatus()){
+        List yellowDev = checkWeb("http://dev.theyellowalliance.com/home");
+        if(yellowDev.get(0).equals("true")){
             stats.add("dev.theyellowalliance.com - :white_check_mark:");
             if(!TOAYelOnline){
                 postMessage.add("<@&" + secret.serverStatusRoleID + "> the Dev Orange Alliance Web Server is back online.");
             }
             TOAYelOnline = true;
         }else{
-            stats.add("dev.theyellowalliance.com - :x:");
+            stats.add("dev.theyellowalliance.com - :x: (Response Code: " + yellowDev.get(1) + ")");
             if(TOAYelOnline){
                 postMessage.add("<@&" + secret.serverStatusRoleID + "> the Dev Orange Alliance Web Server is offline.  <@&" + secret.toaAdminRoleID + "> are investigating the issue now.");
             }else{
