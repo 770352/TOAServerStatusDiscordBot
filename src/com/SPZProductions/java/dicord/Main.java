@@ -93,7 +93,7 @@ public class Main extends ListenerAdapter{
             if(Boolean.valueOf(checkWeb("http://beta.theorangealliance.org/home").get(0)) != TOABetaOnline){
                 update();
                 System.out.println("Updated because of TOA Beta Web");
-            }else if(Boolean.valueOf(checkWeb("http://theorangealliance.org/home").get(0)) != TOAOrgOnline){
+            }else if(Boolean.valueOf(checkWeb("http://theorangealliance.org:8080/home").get(0)) != TOAOrgOnline){
                 update();
                 System.out.println("Updated because of TOA Live Web");
             }else if(Boolean.valueOf(checkWeb("http://dev.theyellowalliance.com/home").get(0)) != TOAYelOnline){
@@ -102,7 +102,7 @@ public class Main extends ListenerAdapter{
             }else if(Boolean.valueOf(checkAPI("http://beta.theorangealliance.org/api").get(0)) != TOABetaAPIOnline){
                 update();
                 System.out.println("Updated because of TOA Beta API");
-            }else if (Boolean.valueOf(checkAPI("http://theorangealliance.org/api").get(0)) != TOAAPIOrgOnline){
+            }else if (Boolean.valueOf(checkAPI("http://theorangealliance.org:8080/api").get(0)) != TOAAPIOrgOnline){
                 update();
                 System.out.println("Updated because of TOA Live API");
             }else if (updateGithub){
@@ -167,7 +167,7 @@ public class Main extends ListenerAdapter{
         List<String> returnValue = new ArrayList<>();
         try {
             HttpURLConnection.setFollowRedirects(false);
-            // HttpURLConnection.setInstanceFollowRedirects(false)
+            //HttpURLConnection.setInstanceFollowRedirects(false);
             HttpURLConnection con = (HttpURLConnection) new URL(sUrl)
                     .openConnection();
             con.setRequestMethod("HEAD");
@@ -311,7 +311,7 @@ public class Main extends ListenerAdapter{
 
         stats.add("-----------SERVER STATUS-----------");
 
-        List orangeLive = checkWeb("http://theorangealliance.org/home");
+        List orangeLive = checkWeb("http://theorangealliance.org:8080/home");
         if(orangeLive.get(0).equals("true")){
             stats.add("theorangealliance.org - :white_check_mark:");
             if(!TOAOrgOnline){
@@ -328,7 +328,7 @@ public class Main extends ListenerAdapter{
             TOAOrgOnline = false;
         }
 
-        List live = checkAPI("http://www.theorangealliance.org/api");
+        List live = checkAPI("http://theorangealliance.org:8080/api");
         if(live.get(0).equals("true")){
             stats.add("theorangealliance.org/api - :white_check_mark:");
             if(!TOAAPIOrgOnline){
@@ -397,6 +397,7 @@ public class Main extends ListenerAdapter{
         }
         if(updateGithub){
             forceUpdateGithubVariables();
+            updateGithub = false;
         }
         stats.add("--------VERSION TRACKING--------");
         String ver = "`v" + WEBAPv.substring(8) + "`";
@@ -441,6 +442,7 @@ public class Main extends ListenerAdapter{
     }
 
     private void loopCommand(String msg){
+        update();
         try{
             if(!thread.isAlive()){
                 thread.start();
@@ -467,5 +469,9 @@ public class Main extends ListenerAdapter{
     private void postNotSet(MessageChannel channel){
         String delete = channel.sendMessage("Posting Channel not set. Type `!post here` in your desired channel to set.").complete().getId();
         channel.deleteMessageById(delete).queueAfter(10, TimeUnit.SECONDS);
+    }
+
+    private void playWithEmbeds(){
+
     }
 }
