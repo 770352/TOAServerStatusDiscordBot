@@ -91,23 +91,26 @@ public class Main extends ListenerAdapter{
         }
 
         private void testForUp(){
-            if(Boolean.valueOf(checkWeb("http://beta.theorangealliance.org/home").get(0)) != TOABetaOnline){
-                update();
+            if(Boolean.valueOf(checkWeb(secret.toaBeta).get(0)) != TOABetaOnline){
+                update("");
                 System.out.println("Updated because of TOA Beta Web");
-            }else if(Boolean.valueOf(checkWeb("http://theorangealliance.org:8080/home").get(0)) != TOAOrgOnline){
-                update();
+            }else if(Boolean.valueOf(checkWeb(secret.toaLive).get(0)) != TOAOrgOnline){
+                update("");
                 System.out.println("Updated because of TOA Live Web");
-            }else if(Boolean.valueOf(checkWeb("http://dev.theyellowalliance.com/home").get(0)) != TOAYelOnline){
-                update();
+            }else if(Boolean.valueOf(checkWeb(secret.toaDeve).get(0)) != TOAYelOnline){
+                update("");
                 System.out.println("Updated because of TYA Dev Web");
-            }else if(Boolean.valueOf(checkAPI("http://beta.theorangealliance.org/api").get(0)) != TOABetaAPIOnline){
-                update();
+            }else if(Boolean.valueOf(checkAPI(secret.toaBetaAPI).get(0)) != TOABetaAPIOnline){
+                update("");
                 System.out.println("Updated because of TOA Beta API");
-            }else if (Boolean.valueOf(checkAPI("http://theorangealliance.org:8080/api").get(0)) != TOAAPIOrgOnline){
-                update();
+            }else if (Boolean.valueOf(checkAPI(secret.toaLiveAPI).get(0)) != TOAAPIOrgOnline){
+                update("");
                 System.out.println("Updated because of TOA Live API");
+            }else if (Boolean.valueOf(checkAPI(secret.toaLiveAPIV2).get(0)) != TOAAPIv2OrgOnline){
+                update("");
+                System.out.println("Updated because of TOA Live APIv2");
             }else if (updateGithub){
-                update();
+                update("");
                 updateGithub = false;
                 System.out.println("Updated because of Github");
             }
@@ -145,8 +148,8 @@ public class Main extends ListenerAdapter{
                 setPostChannel(channel);
 
             }else if(postingChannel != null){
-                if (msg.equals("!check")) {
-                    update();
+                if (msg.startsWith("!check")) {
+                    update(msg);
 
                 }else if(msg.equals("!github")){
                     githubCommand(channel);
@@ -297,7 +300,7 @@ public class Main extends ListenerAdapter{
         updateGithub = false;
     }
 
-    private void update(){
+    private void update(String msg){
         if(lastMessageID != null && postingChannel != null){
             try{
                 postingChannel.deleteMessageById(lastMessageID).complete();
@@ -312,15 +315,15 @@ public class Main extends ListenerAdapter{
 
         stats.add("-----------SERVER STATUS-----------");
 
-        if(checkWeb("http://theorangealliance.org/home").get(0).equals("true")){
+        if(checkWeb(secret.toaLive).get(0).equals("true")){
             stats.add("theorangealliance.org - :white_check_mark:");
             if(!TOAOrgOnline){
                 postMessage.add("<@&" + secret.serverStatusRoleID + "> the Main Orange Alliance Web Server is back online.");
             }
             TOAOrgOnline = true;
         }else{
-            stats.add("theorangealliance.org - :x: (Response Code: " + checkWeb("http://theorangealliance.org/home").get(1) + ")" );
-            if(TOAOrgOnline){
+            stats.add("theorangealliance.org - :x: (Response Code: " + checkWeb(secret.toaLive).get(1) + ")" );
+            if(TOAOrgOnline && !msg.contains("--noping")){
                 postMessage.add("<@&" + secret.serverStatusRoleID + "> the Main Orange Alliance Web Server is offline.  <@&" + secret.toaAdminRoleID + "> are investigating the issue now.");
             }else{
                 postMessage.add("The Main Orange Alliance Web Server is still offline.  Investigation in progress.");
@@ -328,7 +331,7 @@ public class Main extends ListenerAdapter{
             TOAOrgOnline = false;
         }
 
-        if(checkAPI("http://theorangealliance.org/api").get(0).equals("true")){
+        if(checkAPI(secret.toaLiveAPI).get(0).equals("true")){
             stats.add("theorangealliance.org/api - :white_check_mark:");
             if(!TOAAPIOrgOnline){
                 postMessage.add("<@&" + secret.serverStatusRoleID + "> the Main Orange Alliance API is back online.");
@@ -336,7 +339,7 @@ public class Main extends ListenerAdapter{
             TOAAPIOrgOnline = true;
         }else{
             stats.add("theorangealliance.org/api - :x: (Response Code: " + checkWeb("http://theorangealliance.org/api").get(1) + ")");
-            if(TOAAPIOrgOnline){
+            if(TOAAPIOrgOnline && !msg.contains("--noping")){
                 postMessage.add("<@&" + secret.serverStatusRoleID + "> the Main Orange Alliance API is offline.  <@&" + secret.toaAdminRoleID + "> are investigating the issue now.");
             }else{
                 postMessage.add("The Main Orange Alliance API is still offline.  Investigation in progress.");
@@ -344,15 +347,15 @@ public class Main extends ListenerAdapter{
             TOAAPIOrgOnline = false;
         }
 
-        if(checkAPI("http://theorangealliance.org:8009/apiv2 ").get(0).equals("true")){
+        if(checkAPI(secret.toaLiveAPIV2).get(0).equals("true")){
             stats.add("theorangealliance.org/apiv2 - :white_check_mark:");
             if(!TOAAPIv2OrgOnline){
                 postMessage.add("<@&" + secret.serverStatusRoleID + "> the Main Orange Alliance APIv2 is back online.");
             }
             TOAAPIv2OrgOnline = true;
         }else{
-            stats.add("theorangealliance.org/apiv2 - :x: (Response Code: " + checkWeb("http://theorangealliance.org:8009/apiv2 ").get(1) + ")");
-            if(TOAAPIv2OrgOnline){
+            stats.add("theorangealliance.org/apiv2 - :x: (Response Code: " + checkWeb(secret.toaLiveAPIV2).get(1) + ")");
+            if(TOAAPIv2OrgOnline && !msg.contains("--noping")){
                 postMessage.add("<@&" + secret.serverStatusRoleID + "> the Main Orange Alliance APIv2 is offline.  <@&" + secret.toaAdminRoleID + "> are investigating the issue now.");
             }else{
                 postMessage.add("The Main Orange Alliance APIv2 is still offline.  Investigation in progress.");
@@ -360,15 +363,15 @@ public class Main extends ListenerAdapter{
             TOAAPIv2OrgOnline = false;
         }
 
-        if(checkWeb("http://beta.theorangealliance.org/home").get(0).equals("true")){
+        if(checkWeb(secret.toaBeta).get(0).equals("true")){
             stats.add("beta.theorangealliance.org - :white_check_mark:");
             if(!TOABetaOnline){
                 postMessage.add("<@&" + secret.serverStatusRoleID + "> the Beta Orange Alliance Web Server is back online.");
             }
             TOABetaOnline = true;
         }else{
-            stats.add("beta.theorangealliance.org - :x: (Response Code: " + checkWeb("http://beta.theorangealliance.org/home").get(1) + ")" );
-            if(TOABetaOnline){
+            stats.add("beta.theorangealliance.org - :x: (Response Code: " + checkWeb(secret.toaBeta).get(1) + ")" );
+            if(TOABetaOnline && !msg.contains("--noping")){
                 postMessage.add("<@&" + secret.serverStatusRoleID + "> the Beta Orange Alliance Web Server is offline.  <@&" + secret.toaAdminRoleID + "> are investigating the issue now.");
             }else{
                 postMessage.add("The Beta Orange Alliance Web Server is still offline.  Investigation in progress.");
@@ -376,15 +379,15 @@ public class Main extends ListenerAdapter{
             TOABetaOnline = false;
         }
 
-        if(checkAPI("http://beta.theorangealliance.org/api").get(0).equals("true")){
+        if(checkAPI(secret.toaBetaAPI).get(0).equals("true")){
             stats.add("beta.theorangealliance.org/api - :white_check_mark:");
             if(!TOABetaAPIOnline){
                 postMessage.add("<@&" + secret.serverStatusRoleID + "> the Beta Orange Alliance API is back online.");
             }
             TOABetaAPIOnline = true;
         }else{
-            stats.add("beta.theorangealliance.org/api - :x: (Response Code: " + checkWeb("http://beta.theorangealliance.org/api").get(1) + ")");
-            if(TOABetaAPIOnline){
+            stats.add("beta.theorangealliance.org/api - :x: (Response Code: " + checkWeb(secret.toaBetaAPI).get(1) + ")");
+            if(TOABetaAPIOnline && !msg.contains("--noping")){
                 postMessage.add("<@&" + secret.serverStatusRoleID + "> the Beta Orange Alliance API is offline.  <@&" + secret.toaAdminRoleID + "> are investigating the issue now.");
             }else{
                 postMessage.add("The Beta Orange Alliance API is still offline.  Investigation in progress.");
@@ -392,15 +395,15 @@ public class Main extends ListenerAdapter{
             TOABetaAPIOnline = false;
         }
 
-        if(checkWeb("http://dev.theyellowalliance.com/home").get(0).equals("true")){
+        if(checkWeb(secret.toaDeve).get(0).equals("true")){
             stats.add("dev.theyellowalliance.com - :white_check_mark:");
             if(!TOAYelOnline){
                 postMessage.add("<@&" + secret.serverStatusRoleID + "> the Dev Orange Alliance Web Server is back online.");
             }
             TOAYelOnline = true;
         }else{
-            stats.add("dev.theyellowalliance.com - :x: (Response Code: " + checkWeb("http://dev.theyellowalliance.com/home").get(1) + ")");
-            if(TOAYelOnline){
+            stats.add("dev.theyellowalliance.com - :x: (Response Code: " + checkWeb(secret.toaDeve).get(1) + ")");
+            if(TOAYelOnline && !msg.contains("--noping")){
                 postMessage.add("<@&" + secret.serverStatusRoleID + "> the Dev Orange Alliance Web Server is offline.  <@&" + secret.toaAdminRoleID + "> are investigating the issue now.");
             }else{
                 postMessage.add("The Dev Orange Alliance Web Server is still offline.  Investigation in progress.");
@@ -454,7 +457,7 @@ public class Main extends ListenerAdapter{
     }
 
     private void loopCommand(String msg){
-        update();
+        update("");
         try{
             if(!thread.isAlive()){
                 thread.start();
