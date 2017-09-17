@@ -32,6 +32,7 @@ public class Main extends ListenerAdapter{
     private String lastMessageID = null;
     private boolean TOAOrgOnline = true;
     private boolean TOAAPIOrgOnline = true;
+    private boolean TOAAPIv2OrgOnline = true;
     private boolean TOABetaOnline = true;
     private boolean TOABetaAPIOnline = true;
     private boolean TOAYelOnline = true;
@@ -311,15 +312,14 @@ public class Main extends ListenerAdapter{
 
         stats.add("-----------SERVER STATUS-----------");
 
-        List orangeLive = checkWeb("http://theorangealliance.org:8080/home");
-        if(orangeLive.get(0).equals("true")){
+        if(checkWeb("http://theorangealliance.org/home").get(0).equals("true")){
             stats.add("theorangealliance.org - :white_check_mark:");
             if(!TOAOrgOnline){
                 postMessage.add("<@&" + secret.serverStatusRoleID + "> the Main Orange Alliance Web Server is back online.");
             }
             TOAOrgOnline = true;
         }else{
-            stats.add("theorangealliance.org - :x: (Response Code: " + orangeLive.get(1) + ")" );
+            stats.add("theorangealliance.org - :x: (Response Code: " + checkWeb("http://theorangealliance.org/home").get(1) + ")" );
             if(TOAOrgOnline){
                 postMessage.add("<@&" + secret.serverStatusRoleID + "> the Main Orange Alliance Web Server is offline.  <@&" + secret.toaAdminRoleID + "> are investigating the issue now.");
             }else{
@@ -328,15 +328,14 @@ public class Main extends ListenerAdapter{
             TOAOrgOnline = false;
         }
 
-        List live = checkAPI("http://theorangealliance.org:8080/api");
-        if(live.get(0).equals("true")){
+        if(checkAPI("http://theorangealliance.org/api").get(0).equals("true")){
             stats.add("theorangealliance.org/api - :white_check_mark:");
             if(!TOAAPIOrgOnline){
                 postMessage.add("<@&" + secret.serverStatusRoleID + "> the Main Orange Alliance API is back online.");
             }
             TOAAPIOrgOnline = true;
         }else{
-            stats.add("theorangealliance.org/api - :x: (Response Code: " + live.get(1) + ")");
+            stats.add("theorangealliance.org/api - :x: (Response Code: " + checkWeb("http://theorangealliance.org/api").get(1) + ")");
             if(TOAAPIOrgOnline){
                 postMessage.add("<@&" + secret.serverStatusRoleID + "> the Main Orange Alliance API is offline.  <@&" + secret.toaAdminRoleID + "> are investigating the issue now.");
             }else{
@@ -345,15 +344,30 @@ public class Main extends ListenerAdapter{
             TOAAPIOrgOnline = false;
         }
 
-        List orangeBeta = checkWeb("http://beta.theorangealliance.org/home");
-        if(orangeBeta.get(0).equals("true")){
+        if(checkAPI("http://theorangealliance.org:8009/apiv2 ").get(0).equals("true")){
+            stats.add("theorangealliance.org/apiv2 - :white_check_mark:");
+            if(!TOAAPIv2OrgOnline){
+                postMessage.add("<@&" + secret.serverStatusRoleID + "> the Main Orange Alliance APIv2 is back online.");
+            }
+            TOAAPIv2OrgOnline = true;
+        }else{
+            stats.add("theorangealliance.org/apiv2 - :x: (Response Code: " + checkWeb("http://theorangealliance.org:8009/apiv2 ").get(1) + ")");
+            if(TOAAPIv2OrgOnline){
+                postMessage.add("<@&" + secret.serverStatusRoleID + "> the Main Orange Alliance APIv2 is offline.  <@&" + secret.toaAdminRoleID + "> are investigating the issue now.");
+            }else{
+                postMessage.add("The Main Orange Alliance APIv2 is still offline.  Investigation in progress.");
+            }
+            TOAAPIv2OrgOnline = false;
+        }
+
+        if(checkWeb("http://beta.theorangealliance.org/home").get(0).equals("true")){
             stats.add("beta.theorangealliance.org - :white_check_mark:");
             if(!TOABetaOnline){
                 postMessage.add("<@&" + secret.serverStatusRoleID + "> the Beta Orange Alliance Web Server is back online.");
             }
             TOABetaOnline = true;
         }else{
-            stats.add("beta.theorangealliance.org - :x: (Response Code: " + orangeBeta.get(1) + ")" );
+            stats.add("beta.theorangealliance.org - :x: (Response Code: " + checkWeb("http://beta.theorangealliance.org/home").get(1) + ")" );
             if(TOABetaOnline){
                 postMessage.add("<@&" + secret.serverStatusRoleID + "> the Beta Orange Alliance Web Server is offline.  <@&" + secret.toaAdminRoleID + "> are investigating the issue now.");
             }else{
@@ -362,15 +376,14 @@ public class Main extends ListenerAdapter{
             TOABetaOnline = false;
         }
 
-        List beta = checkAPI("http://beta.theorangealliance.org/api");
-        if(beta.get(0).equals("true")){
+        if(checkAPI("http://beta.theorangealliance.org/api").get(0).equals("true")){
             stats.add("beta.theorangealliance.org/api - :white_check_mark:");
             if(!TOABetaAPIOnline){
                 postMessage.add("<@&" + secret.serverStatusRoleID + "> the Beta Orange Alliance API is back online.");
             }
             TOABetaAPIOnline = true;
         }else{
-            stats.add("beta.theorangealliance.org/api - :x: (Response Code: " + beta.get(1) + ")");
+            stats.add("beta.theorangealliance.org/api - :x: (Response Code: " + checkWeb("http://beta.theorangealliance.org/api").get(1) + ")");
             if(TOABetaAPIOnline){
                 postMessage.add("<@&" + secret.serverStatusRoleID + "> the Beta Orange Alliance API is offline.  <@&" + secret.toaAdminRoleID + "> are investigating the issue now.");
             }else{
@@ -379,15 +392,14 @@ public class Main extends ListenerAdapter{
             TOABetaAPIOnline = false;
         }
 
-        List yellowDev = checkWeb("http://dev.theyellowalliance.com/home");
-        if(yellowDev.get(0).equals("true")){
+        if(checkWeb("http://dev.theyellowalliance.com/home").get(0).equals("true")){
             stats.add("dev.theyellowalliance.com - :white_check_mark:");
             if(!TOAYelOnline){
                 postMessage.add("<@&" + secret.serverStatusRoleID + "> the Dev Orange Alliance Web Server is back online.");
             }
             TOAYelOnline = true;
         }else{
-            stats.add("dev.theyellowalliance.com - :x: (Response Code: " + yellowDev.get(1) + ")");
+            stats.add("dev.theyellowalliance.com - :x: (Response Code: " + checkWeb("http://dev.theyellowalliance.com/home").get(1) + ")");
             if(TOAYelOnline){
                 postMessage.add("<@&" + secret.serverStatusRoleID + "> the Dev Orange Alliance Web Server is offline.  <@&" + secret.toaAdminRoleID + "> are investigating the issue now.");
             }else{
