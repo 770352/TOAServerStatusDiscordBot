@@ -31,7 +31,6 @@ public class Main extends ListenerAdapter{
 
     private String lastMessageID = null;
     private boolean TOAOrgOnline = true;
-    private boolean TOAAPIOrgOnline = true;
     private boolean TOAAPIv2OrgOnline = true;
     private boolean TOABetaOnline = true;
     private boolean TOABetaAPIOnline = true;
@@ -40,6 +39,7 @@ public class Main extends ListenerAdapter{
     private String APIDLv = null;
     private String BDUPLv = null;
     private String WEBAPv = null;
+    private String DataSyncv = null;
     private MessageChannel postingChannel = null;
     private loop loop1 = new loop();
     private Thread thread = new Thread(loop1);
@@ -97,15 +97,9 @@ public class Main extends ListenerAdapter{
             }else if(Boolean.valueOf(checkWeb(secret.toaLive).get(0)) != TOAOrgOnline){
                 update("");
                 System.out.println("Updated because of TOA Live Web");
-            }else if(Boolean.valueOf(checkWeb(secret.toaDeve).get(0)) != TOAYelOnline){
-                update("");
-                System.out.println("Updated because of TYA Dev Web");
             }else if(Boolean.valueOf(checkAPI(secret.toaBetaAPI).get(0)) != TOABetaAPIOnline){
                 update("");
                 System.out.println("Updated because of TOA Beta API");
-            }else if (Boolean.valueOf(checkAPI(secret.toaLiveAPI).get(0)) != TOAAPIOrgOnline){
-                update("");
-                System.out.println("Updated because of TOA Live API");
             }else if (Boolean.valueOf(checkAPI(secret.toaLiveAPIV2).get(0)) != TOAAPIv2OrgOnline){
                 update("");
                 System.out.println("Updated because of TOA Live APIv2");
@@ -167,13 +161,13 @@ public class Main extends ListenerAdapter{
 
     }
 
-    List<String> checkWeb(String sUrl){
+    List<String> checkWeb(String Url){
         List<String> returnValue = new ArrayList<>();
         try {
             HttpURLConnection.setFollowRedirects(false);
             //HttpURLConnection.setInstanceFollowRedirects(false);
-            HttpURLConnection con = (HttpURLConnection) new URL(sUrl)
-                    .openConnection();
+            HttpURLConnection con = (HttpURLConnection) new URL(Url).openConnection();
+            con.setConnectTimeout(10000);
             con.setRequestMethod("HEAD");
             if(con.getResponseCode() == HttpURLConnection.HTTP_OK){
                 returnValue.add("true");
@@ -195,13 +189,14 @@ public class Main extends ListenerAdapter{
 
             HttpURLConnection con = (HttpURLConnection) url.openConnection();
 
+            con.setConnectTimeout(10000);
             con.setRequestMethod("GET");
 
             con.setRequestProperty("X-TOA-Key", secret.apiKey);//API Key
             con.setRequestProperty("X-Application-Origin", "TOA Discord Status Bot");
 
             int responseCode = con.getResponseCode();
-            if (responseCode == 200) {
+            if (con.getResponseCode() == HttpURLConnection.HTTP_OK) {
                 returnValue.add("true");
                 returnValue.add("200");
             }else{
@@ -214,23 +209,12 @@ public class Main extends ListenerAdapter{
         return returnValue;
     }
 
-    private String checkVersionAPIDownloader(){
-        String sUrl = "https://api.github.com/repos/orange-alliance/TOAApiDowloader/releases/latest?client_id=" + secret.githubClientID + "&client_secret=" + secret.githubClientSecret;
+    private String checkVersionDataSync(){
+        String sUrl = "https://api.github.com/repos/orange-alliance/TOA-DataSync/tags?client_id=" + secret.githubClientID + "&client_secret=" + secret.githubClientSecret;
         String version = null;
         try {
             version = returnVersion(new URL(sUrl));
 
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return version;
-    }
-
-    private String checkVersionDataUploader(){
-        String sUrl = "https://api.github.com/repos/orange-alliance/TOADataImporter/releases/latest?client_id=" + secret.githubClientID + "&client_secret=" + secret.githubClientSecret;
-        String version = null;
-        try {
-            version = returnVersion(new URL(sUrl));
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -248,8 +232,9 @@ public class Main extends ListenerAdapter{
         }
         in.close();
 
-        JSONObject json = new JSONObject(response + "");
-        return json.get("tag_name").toString();
+        JSONArray json = new JSONArray(response + "");
+
+        return json.getJSONObject(0).get("name").toString();
     }
 
     private String checkWebAPIVersion() {
@@ -270,7 +255,7 @@ public class Main extends ListenerAdapter{
         JSONArray json = new JSONArray(response + "");
         int size = json.length();
         size--;
-        size--;
+        //size--;
 
         return json.getJSONObject(size).get("title").toString();
     }
@@ -290,12 +275,11 @@ public class Main extends ListenerAdapter{
     }
 
     private boolean checkClientID(Guild guild, JDA jda, Message message){
-        return guild.getMembersWithRoles(jda.getRolesByName(secret.roleAllowed, true)).contains(message.getMember());
+        return guild.getMembersWithRoles(jda.getRoleById(secret.toaAdminRoleID)).contains(message.getMember());
     }
 
     private void forceUpdateGithubVariables(){
-        APIDLv = checkVersionAPIDownloader();
-        BDUPLv = checkVersionDataUploader();
+        DataSyncv = checkVersionDataSync();
         WEBAPv = checkWebAPIVersion();
         updateGithub = false;
     }
@@ -331,22 +315,6 @@ public class Main extends ListenerAdapter{
             TOAOrgOnline = false;
         }
 
-        if(checkAPI(secret.toaLiveAPI).get(0).equals("true")){
-            stats.add("theorangealliance.org/api - :white_check_mark:");
-            if(!TOAAPIOrgOnline){
-                postMessage.add("<@&" + secret.serverStatusRoleID + "> the Main Orange Alliance API is back online.");
-            }
-            TOAAPIOrgOnline = true;
-        }else{
-            stats.add("theorangealliance.org/api - :x: (Response Code: " + checkWeb("http://theorangealliance.org/api").get(1) + ")");
-            if(TOAAPIOrgOnline && !msg.contains("--noping")){
-                postMessage.add("<@&" + secret.serverStatusRoleID + "> the Main Orange Alliance API is offline.  <@&" + secret.toaAdminRoleID + "> are investigating the issue now.");
-            }else{
-                postMessage.add("The Main Orange Alliance API is still offline.  Investigation in progress.");
-            }
-            TOAAPIOrgOnline = false;
-        }
-
         if(checkAPI(secret.toaLiveAPIV2).get(0).equals("true")){
             stats.add("theorangealliance.org/apiv2 - :white_check_mark:");
             if(!TOAAPIv2OrgOnline){
@@ -380,46 +348,31 @@ public class Main extends ListenerAdapter{
         }
 
         if(checkAPI(secret.toaBetaAPI).get(0).equals("true")){
-            stats.add("beta.theorangealliance.org/api - :white_check_mark:");
+            stats.add("beta.theorangealliance.org/apiv2 - :white_check_mark:");
             if(!TOABetaAPIOnline){
-                postMessage.add("<@&" + secret.serverStatusRoleID + "> the Beta Orange Alliance API is back online.");
+                postMessage.add("<@&" + secret.serverStatusRoleID + "> the Beta Orange Alliance APIv2 is back online.");
             }
             TOABetaAPIOnline = true;
         }else{
-            stats.add("beta.theorangealliance.org/api - :x: (Response Code: " + checkWeb(secret.toaBetaAPI).get(1) + ")");
+            stats.add("beta.theorangealliance.org/apiv2 - :x: (Response Code: " + checkWeb(secret.toaBetaAPI).get(1) + ")");
             if(TOABetaAPIOnline && !msg.contains("--noping")){
-                postMessage.add("<@&" + secret.serverStatusRoleID + "> the Beta Orange Alliance API is offline.  <@&" + secret.toaAdminRoleID + "> are investigating the issue now.");
+                postMessage.add("<@&" + secret.serverStatusRoleID + "> the Beta Orange Alliance APIv2 is offline.  <@&" + secret.toaAdminRoleID + "> are investigating the issue now.");
             }else{
-                postMessage.add("The Beta Orange Alliance API is still offline.  Investigation in progress.");
+                postMessage.add("The Beta Orange Alliance APIv2 is still offline.  Investigation in progress.");
             }
             TOABetaAPIOnline = false;
-        }
-
-        if(checkWeb(secret.toaDeve).get(0).equals("true")){
-            stats.add("dev.theyellowalliance.com - :white_check_mark:");
-            if(!TOAYelOnline){
-                postMessage.add("<@&" + secret.serverStatusRoleID + "> the Dev Orange Alliance Web Server is back online.");
-            }
-            TOAYelOnline = true;
-        }else{
-            stats.add("dev.theyellowalliance.com - :x: (Response Code: " + checkWeb(secret.toaDeve).get(1) + ")");
-            if(TOAYelOnline && !msg.contains("--noping")){
-                postMessage.add("<@&" + secret.serverStatusRoleID + "> the Dev Orange Alliance Web Server is offline.  <@&" + secret.toaAdminRoleID + "> are investigating the issue now.");
-            }else{
-                postMessage.add("The Dev Orange Alliance Web Server is still offline.  Investigation in progress.");
-            }
-            TOAYelOnline = false;
         }
         if(updateGithub){
             forceUpdateGithubVariables();
             updateGithub = false;
         }
         stats.add("--------VERSION TRACKING--------");
-        String ver = "`v" + WEBAPv.substring(8) + "`";
+        String ver = "`" + WEBAPv + "`";//.substring(8) + "`"; TODO: FIX THIS WHEN ALEX FIXES HIS STUFF
         stats.add("Live Web App: " + ver);
         stats.add("Live API: " + ver);
-        stats.add("TOA API Downloader: `v" + APIDLv + "`");
-        stats.add("TOA Data Uploader: `v" + BDUPLv + "`");
+        //stats.add("TOA API Downloader: `v" + APIDLv + "`");
+        //stats.add("TOA Data Uploader: `v" + BDUPLv + "`");
+        stats.add("TOA Live Data Uploader: `" + DataSyncv + "`");
 
         postMessage.add("To be notified about server outages, do `?giveme Server Alerting` in <#" + secret.spamChannelID + ">");
 
@@ -486,7 +439,4 @@ public class Main extends ListenerAdapter{
         channel.deleteMessageById(delete).queueAfter(10, TimeUnit.SECONDS);
     }
 
-    private void playWithEmbeds(){
-
-    }
 }

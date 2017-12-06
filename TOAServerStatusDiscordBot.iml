@@ -7,10 +7,10 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="module-library" exported="">
+    <orderEntry type="module-library">
       <library>
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/../JDA-3.3.0_260-withDependencies.jar!/" />
+          <root url="jar://$MODULE_DIR$/libs/JDA-3.3.1_307-withDependencies.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />

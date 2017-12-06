@@ -26,16 +26,11 @@ public class secrets_example {
     public final String toaAdminRoleID = ""; //The role to inform the admin when the server status changes
     public final String spamChannelID = ""; //The Channel in which the ?giveme command can/should be performed
     public final String channelToListen = ""; //The Channel you want t the bot to output in it's console (Preferably the one you'll be controlling it in)
+
     /**Website Definitions**/
     // You shouldn't have to mess with these, its really just something to make my life a bit easier
     public final String toaLive = "http://theorangealliance.org/home";
-    public final String toaLiveAPI = "http://theorangealliance.org/api";
     public final String toaLiveAPIV2 = "http://theorangealliance.org:8009/apiv2";
     public final String toaBeta = "http://beta.theorangealliance.org/home";
-    public final String toaBetaAPI = "http://beta.theorangealliance.org/api";
-    public final String toaDeve = "http://dev.theyellowalliance.com/home";
-
-    //TODO: Change this to role rather than specific user because this is kinda dumb
-    public final String roleAllowed = ""; //The role that is allowed to use this bot
-
+    public final String toaBetaAPI = "http://beta.theorangealliance.org/apiv2";
 }
